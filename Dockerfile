@@ -1,13 +1,12 @@
-FROM alpine:3
+FROM nginx
 
-RUN apk add openssh --no-cache
+RUN apt-get update -y
+RUN apt-get upgrade -y
+RUN apt-get install -y fcgiwrap git
 
-RUN adduser -D gitra
-RUN passwd -d gitra
+RUN sed -i 's/www-data/nginx/g' /etc/init.d/fcgiwrap
+RUN chown nginx:nginx /etc/init.d/fcgiwrap
 
-RUN sed -i "s|#PasswordAuthentication yes|PasswordAuthentication no|g" /etc/ssh/sshd_config
+COPY git.conf /etc/nginx/conf.d/default.conf
 
-COPY entrypoint.sh /entrypoint.sh
-
-EXPOSE 22
-ENTRYPOINT ["/entrypoint.sh"]
+CMD /etc/init.d/fcgiwrap start && nginx -g 'daemon off;'
